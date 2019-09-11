@@ -84,12 +84,12 @@ rolebinding.rbac.authorization.k8s.io/sealed-secrets-service-proxier created
 # (--dry-runでの実行。これは単なるlocalファイルであることに留意))
 $ kubectl create secret generic mysecret --dry-run --from-literal=foo=bar -o json >mysecret.json
 
-# This is the important bit:
 # ここが重要なポイント
-$ kubeseal <mysecret.json >mysealedsecret.json
+# 以下のコマンドで、通常のsecretファイルを暗号化してsealed secretを作成する
+$ kubeseal <mysecret.json>mysealedsecret.json
 
 # mysealedsecret.jsonは暗号化され、githubにuploadしてもOK。
-# そして、これをクラスターに適用
+# そして、sealed secretをクラスターに適用
 $ kubectl create -f mysealedsecret.json
 
 # Profit!
@@ -98,8 +98,10 @@ $ kubectl get secret mysecret
 
 実行結果
 ```
+#実際にsecretを生成
 (⎈ |tomcluster:default)eb82649:02_Maven eb82649@jp.ibm.com$ kubectl create secret generic mysecret --dry-run --from-literal=foo=bar -o json >mysecret.json
 
+# 内容は以下
 (⎈ |tomcluster:default)eb82649:02_Maven eb82649@jp.ibm.com$ cat mysecret.json
 {
     "kind": "Secret",
@@ -113,14 +115,10 @@ $ kubectl get secret mysecret
     }
 }
 
+# このsecretを元に、sealed secretを生成する。
 (⎈ |tomcluster:default)eb82649:02_Maven eb82649@jp.ibm.com$ kubeseal <mysecret.json >mysealedsecret.json
 
-(⎈ |tomcluster:default)eb82649:02_Maven eb82649@jp.ibm.com$ ls -ltr
-:
--rw-r--r--  1 eb82649@jp.ibm.com  staff   179  9 11 17:39 mysecret.json
--rw-r--r--  1 eb82649@jp.ibm.com  staff  1117  9 11 17:39 mysealedsecret.json
-:
-
+# 中身は以下の通り。暗号化されてる。
 (⎈ |tomcluster:default)eb82649:02_Maven eb82649@jp.ibm.com$ cat mysealedsecret.json 
 {
   "kind": "SealedSecret",
@@ -147,9 +145,11 @@ $ kubectl get secret mysecret
   }
 }
 
+# クラスターに適用する
 (⎈ |tomcluster:default)eb82649:02_Maven eb82649@jp.ibm.com$ kubectl apply -f mysealedsecret.json 
 sealedsecret.bitnami.com/mysecret created
 
+# 適用後は通常のsecretと同じ様に扱われる。
 (⎈ |tomcluster:default)eb82649:02_Maven eb82649@jp.ibm.com$ kubectl get secret mysecret -o yaml
 apiVersion: v1
 data:
@@ -169,5 +169,4 @@ metadata:
   selfLink: /api/v1/namespaces/default/secrets/mysecret
   uid: 46114282-adb9-4f32-887b-99a54d27ae76
 type: Opaque
-(⎈ |tomcluster:default)eb82649:02_Maven eb82649@jp.ibm.com$ 
 ```
