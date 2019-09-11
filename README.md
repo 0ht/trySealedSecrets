@@ -1,4 +1,6 @@
 # SealedSecretsの試行
+オリジナル：https://github.com/bitnami-labs/sealed-secrets
+
 Secretを、SealedSecretに暗号化。SealedSecretは、ターゲットのクラスター内で動作するControllerのみが複合化可能。
 
 ## 概要
